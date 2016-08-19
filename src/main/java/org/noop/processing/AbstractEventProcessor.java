@@ -319,12 +319,6 @@ public abstract class AbstractEventProcessor
     }
 
 
-    @Override
-    public Set<String> getSupportedEvents() {
-        throw new NotImplementedException();
-    }
-
-
     public void addPreDefaultEventHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.preDefaultEventHandlers.addHandler(p_handler);

@@ -52,9 +52,6 @@ public interface IEventProcessor {
     Set<Class> getRegisteredEventTypes();
 
 
-    Set<String> getSupportedEvents();
-
-
     void addPreEventHandlers(Set<IEventHandler> p_handlers);
 
 
