@@ -114,7 +114,7 @@ public abstract class AbstractFsm
 
 
     protected void processPendingState() throws Exception {
-        if (this.pendingState != null) {
+        while(this.pendingState != null) {
 
             IState OldState = this.currentState;
 

@@ -47,17 +47,7 @@ public class Fsm
             logger.error("init() - ", ex);
         }
     }
-
-    @Override
-    public Set<String> getSupportedEvents() {
-        final Set<String> Events = new ConcurrentSkipListSet<>();
-        Events.add(Action1.class.getSimpleName());
-        Events.add(Action2.class.getSimpleName());
-        Events.add(Action3.class.getSimpleName());
-        Events.add(Action4.class.getSimpleName());
-
-        return Events;
-    }
+    
 
     public class State1
             extends AbstractState {
