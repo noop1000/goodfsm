@@ -1,5 +1,7 @@
 package org.noop.goodfsm.akka;
 
+import org.noop.goodfsm.fsm.AbstractState;
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,11 +20,26 @@ package org.noop.goodfsm.akka;
  * specific language governing permissions and limitations
  * under the License.
  */
-public interface IStashAware {
+public class AbstractStateWithStash extends AbstractState implements IStashAware {
 
-    void stash();
+    @Override
+    public void stash() {
+        if (getFsm() instanceof IStashAware) {
+            ((IStashAware) getFsm()).stash();
+        }
+    }
 
-    void unstashAll();
+    @Override
+    public void unstashAll() {
+        if (getFsm() instanceof IStashAware) {
+            ((IStashAware) getFsm()).unstashAll();
+        }
+    }
 
-    void unstash();
+    @Override
+    public void unstash() {
+        if (getFsm() instanceof IStashAware) {
+            ((IStashAware) getFsm()).unstash();
+        }
+    }
 }

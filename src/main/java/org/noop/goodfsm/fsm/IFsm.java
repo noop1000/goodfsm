@@ -23,7 +23,7 @@ import org.noop.processing.IEventProcessor;
  * specific language governing permissions and limitations
  * under the License.
  */
-public interface IFsm
+public interface IFsm<T>
         extends IEventProcessor<IFsm>, IStateEnterListener, IStateExitListener, ISchedulerAware<IFsm> {
 
 
@@ -72,5 +72,7 @@ public interface IFsm
 
     public IFsm setScheduler(IScheduler p_Scheduler);
 
+
+    public T getContainer();
 
 }

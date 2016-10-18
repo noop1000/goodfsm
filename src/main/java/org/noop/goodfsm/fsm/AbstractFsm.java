@@ -30,8 +30,8 @@ import java.util.Set;
  * specific language governing permissions and limitations
  * under the License.
  */
-public abstract class AbstractFsm
-        implements IFsm {
+public abstract class AbstractFsm<T>
+        implements IFsm<T> {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 
@@ -42,6 +42,16 @@ public abstract class AbstractFsm
     private IState currentState = null;
     private Class<? extends IState> pendingState = null;
     private Object pendingReason = null;
+
+    private T container;
+
+
+    public AbstractFsm(T p_container) {
+        super();
+        this.stateExitListenerMgr.addStateListener(this);
+        this.stateEnterListenerMgr.addStateListener(this);
+        this.container = p_container;
+    }
 
 
     public AbstractFsm() {
@@ -472,5 +482,9 @@ public abstract class AbstractFsm
 
     @Override
     public void init() {
+    }
+
+    public T getContainer() {
+        return this.container;
     }
 }

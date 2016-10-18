@@ -1,6 +1,7 @@
 package org.noop.goodfsm.fsm;
 
 
+import org.noop.goodfsm.akka.IStashAware;
 import org.noop.goodfsm.events.common.EventStateTimeout;
 import org.noop.goodfsm.fsm.scheduler.ICancellable;
 import org.noop.goodfsm.fsm.scheduler.IScheduler;
