@@ -1,6 +1,5 @@
 package org.noop.goodfsm.fsm;
 
-
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,16 +18,6 @@ package org.noop.goodfsm.fsm;
  * specific language governing permissions and limitations
  * under the License.
  */
-public class AbstractStateListener
-        implements IStateListener {
-    @Override
-    public void onStateEnter(IState p_oldState, IState p_newState) {
-
-    }
-
-
-    @Override
-    public void onStateExit(IState p_State) {
-
-    }
+public interface IStateEnterListener {
+    void onStateEnter(IState p_oldState, IState p_newState);
 }

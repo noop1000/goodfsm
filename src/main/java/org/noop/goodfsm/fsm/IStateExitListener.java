@@ -1,5 +1,4 @@
-package org.noop.goodfsm.fsm.scheduler;
-
+package org.noop.goodfsm.fsm;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,14 +17,7 @@ package org.noop.goodfsm.fsm.scheduler;
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- * <p>
- * Marks a class as being aware of the scheduler (and wants it injected)
  */
-public interface ISchedulerAware<T> {
-
-    IScheduler getScheduler();
-
-
-    T setScheduler(IScheduler p_Scheduler);
-
+public interface IStateExitListener {
+    void onStateExit(IState p_State);
 }

@@ -39,12 +39,12 @@ public class EventHandlerManager implements IEventHandlerManager {
     public boolean applyEvent(final IEventProcessor p_eventProcessor, final Object p_event) throws Exception {
         boolean result = false;
 
-        Class Action = p_event.getClass();
+        Class event = p_event.getClass();
 
-        if (this.handlers.containsKey(Action)) {
+        if (this.handlers.containsKey(event)) {
             result = true;
 
-            List<IEventHandler> HandlersToProcess = new ArrayList<>(this.handlers.get(Action));
+            List<IEventHandler> HandlersToProcess = new ArrayList<>(this.handlers.get(event));
 
             for (IEventHandler Handler : HandlersToProcess) {
                 try {
@@ -62,13 +62,13 @@ public class EventHandlerManager implements IEventHandlerManager {
     @Override
     public void addHandler(IEventHandler p_handler) {
         if (p_handler != null) {
-            Class Action = p_handler.getSupportedAction();
+            Class event = p_handler.getSupportedAction();
 
-            Set<IEventHandler> Handlers = this.handlers.get(Action);
+            Set<IEventHandler> Handlers = this.handlers.get(event);
 
             if (Handlers == null) {
                 Handlers = new LinkedHashSet<>();
-                this.handlers.put(Action, Handlers);
+                this.handlers.put(event, Handlers);
             }
 
             Handlers.add(p_handler);
@@ -82,14 +82,14 @@ public class EventHandlerManager implements IEventHandlerManager {
         boolean result = false;
 
         if (p_handler != null) {
-            Class Action = p_handler.getSupportedAction();
+            Class event = p_handler.getSupportedAction();
 
-            Set<IEventHandler> PojoHandlers = this.handlers.get(Action);
+            Set<IEventHandler> pojoHandlers = this.handlers.get(event);
 
-            if (PojoHandlers != null) {
-                result = PojoHandlers.remove(p_handler);
-                if (PojoHandlers.isEmpty()) {
-                    this.handlers.remove(Action);
+            if (pojoHandlers != null) {
+                result = pojoHandlers.remove(p_handler);
+                if (pojoHandlers.isEmpty()) {
+                    this.handlers.remove(event);
                 }
             }
 
@@ -102,9 +102,9 @@ public class EventHandlerManager implements IEventHandlerManager {
     public Set<IEventHandler> getHandlersForEvent(Object p_event) {
         Set<IEventHandler> result = null;
 
-        Class Action = p_event.getClass();
+        Class event = p_event.getClass();
 
-        result = this.handlers.get(Action);
+        result = this.handlers.get(event);
 
         return result;
 

@@ -1,14 +1,12 @@
 package org.noop.goodfsm.fsm.fsm;
 
 
+import org.noop.goodfsm.akka.AbstractFsmWithStash;
 import org.noop.goodfsm.fsm.*;
 import org.noop.processing.AbstractActionHandler;
 import org.noop.processing.IEventProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 
 /**
@@ -30,7 +28,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
  * under the License.
  */
 public class Fsm
-        extends AbstractFsm {
+        extends AbstractFsmWithStash {
     public final static Logger logger = LoggerFactory.getLogger(Fsm.class);
 
 
@@ -47,7 +45,7 @@ public class Fsm
             logger.error("init() - ", ex);
         }
     }
-    
+
 
     public class State1
             extends AbstractState {

@@ -26,7 +26,7 @@ import java.util.UUID;
  * under the License.
  */
 public interface IState
-        extends IEventProcessor, IStateListener, ISchedulerAware {
+        extends IEventProcessor<IState>, IStateEnterListener,  IStateExitListener, ISchedulerAware<IState> {
 
     IFsm getFsm();
 

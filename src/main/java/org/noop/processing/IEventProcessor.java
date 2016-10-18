@@ -22,25 +22,28 @@ import java.util.Set;
  * specific language governing permissions and limitations
  * under the License.
  */
-public interface IEventProcessor {
+public interface IEventProcessor<T> {
 
 
-    void onReceive(Object p_event) throws Exception;
+    boolean onReceive(Object p_event) throws Exception;
 
 
-    void addPreEventHandler(IEventHandler p_handler);
+    boolean handleUnknownEvent(Object p_event) throws Exception;
+
+
+    T addPreEventHandler(IEventHandler p_handler);
 
 
     void removePreEventHandler(IEventHandler p_handler);
 
 
-    void addEventHandler(IEventHandler p_handler);
+    T addEventHandler(IEventHandler p_handler);
 
 
     void removeEventHandler(IEventHandler p_handler);
 
 
-    void addPostEventHandler(IEventHandler p_handler);
+    T addPostEventHandler(IEventHandler p_handler);
 
 
     void removePostEventHandler(IEventHandler p_handler);
@@ -52,13 +55,13 @@ public interface IEventProcessor {
     Set<Class> getRegisteredEventTypes();
 
 
-    void addPreEventHandlers(Set<IEventHandler> p_handlers);
+    T addPreEventHandlers(Set<IEventHandler> p_handlers);
 
 
-    void addEventHandlers(Set<IEventHandler> p_handlers);
+    T addEventHandlers(Set<IEventHandler> p_handlers);
 
 
-    void addPostEventHandlers(Set<IEventHandler> p_handlers);
+    T addPostEventHandlers(Set<IEventHandler> p_handlers);
 
 
     void removePreEventHandlers(Set<IEventHandler> p_handlers);
@@ -70,13 +73,13 @@ public interface IEventProcessor {
     void removePostEventHandlers(Set<IEventHandler> p_handlers);
 
 
-    void addPreDefaultEventHandler(IEventHandler<Object> p_handler);
+    T addPreDefaultEventHandler(IEventHandler<Object> p_handler);
 
 
-    void addDefaultEventHandler(IEventHandler<Object> p_handler);
+    T addDefaultEventHandler(IEventHandler<Object> p_handler);
 
 
-    void addPostDefaultEventHandler(IEventHandler<Object> p_handler);
+    T addPostDefaultEventHandler(IEventHandler<Object> p_handler);
 
 
     void removeDefaultEventHandler(IEventHandler<Object> p_handler);
@@ -88,13 +91,13 @@ public interface IEventProcessor {
     void removePostDefaultEventHandler(IEventHandler<Object> p_handler);
 
 
-    void addPreUnhandledHandler(IEventHandler<Object> p_handler);
+    T addPreUnhandledHandler(IEventHandler<Object> p_handler);
 
 
-    void addUnhandledEventHandler(IEventHandler<Object> p_handler);
+    T addUnhandledEventHandler(IEventHandler<Object> p_handler);
 
 
-    void addPostUnhandledEventHandler(IEventHandler<Object> p_handler);
+    T addPostUnhandledEventHandler(IEventHandler<Object> p_handler);
 
 
     void removeUnhandledEventHandler(IEventHandler<Object> p_handler);

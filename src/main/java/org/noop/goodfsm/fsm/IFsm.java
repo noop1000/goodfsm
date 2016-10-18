@@ -24,19 +24,18 @@ import org.noop.processing.IEventProcessor;
  * under the License.
  */
 public interface IFsm
-        extends IEventProcessor, IStateListener, ISchedulerAware {
+        extends IEventProcessor<IFsm>, IStateEnterListener, IStateExitListener, ISchedulerAware<IFsm> {
 
 
     public IState getCurrentState();
 
 
     /**
-     * returns the old state.
      * This will set the state NOW, and will NOT fire events etc
      *
      * @return
      */
-    public IState initFsm(Class<? extends IState> p_newState) throws Exception;
+    public IFsm initFsm(Class<? extends IState> p_newState) throws Exception;
 
 
     /**
@@ -49,7 +48,7 @@ public interface IFsm
      *
      * @return
      */
-    public void transitionTo(Class<? extends IState> p_newState) throws Exception;
+    public IFsm transitionTo(Class<? extends IState> p_newState) throws Exception;
 
 
     public Object getCurrentEvent();
@@ -58,11 +57,12 @@ public interface IFsm
     public String getFsmName();
 
 
-    public boolean removeStateListener(IStateListener p_listener);
+    public boolean removeStateListener(IStateExitListener p_listener);
 
 
-    public boolean addStateListener(IStateListener p_listener);
+    public IFsm addStateEnterListener(IStateEnterListener p_listener);
 
+    public IFsm addStateExitListener(IStateExitListener p_listener);
 
     public void clearAllStateListeners();
 
@@ -70,7 +70,7 @@ public interface IFsm
     public IScheduler getScheduler();
 
 
-    public void setScheduler(IScheduler p_Scheduler);
+    public IFsm setScheduler(IScheduler p_Scheduler);
 
 
 }

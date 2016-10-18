@@ -112,10 +112,13 @@ public class TestFsm {
         Fsm1.addEventHandler(Action3Handler);
         Fsm1.addEventHandler(Action4Handler);
 
-        Fsm1.addStateListener(StateListener1);
-        Fsm1.addStateListener(StateListener2);
+        Fsm1.addStateEnterListener(StateListener1);
+        Fsm1.addStateExitListener(StateListener1);
 
-        Fsm1.addStateListener(new AbstractStateListener() {
+        Fsm1.addStateEnterListener(StateListener2);
+        Fsm1.addStateExitListener(StateListener2);
+
+        Fsm1.addStateEnterListener(new IStateEnterListener() {
             @Override
             public void onStateEnter(IState p_OldState, IState p_NewState) {
                 if (p_NewState instanceof Fsm.State4) {

@@ -30,7 +30,7 @@ import java.util.Set;
  * under the License.
  */
 public abstract class AbstractEventProcessor
-        implements IEventProcessor, ISchedulerAware {
+        implements IEventProcessor<Object>, ISchedulerAware<Object> {
 
     private EventHandlerManager eventHandlers = new EventHandlerManager();
 
@@ -86,7 +86,7 @@ public abstract class AbstractEventProcessor
 
 
     @Override
-    public void onReceive(Object p_event) throws Exception {
+    public boolean onReceive(Object p_event) throws Exception {
         setCurrentEvent(p_event);
 
         prepareHandlersForNotify(p_event);
@@ -95,12 +95,13 @@ public abstract class AbstractEventProcessor
             firePreEventHandlers(p_event);
         }
 
-        fireEventHandlers(p_event);
+        boolean handled = fireEventHandlers(p_event);
 
         if (this.postEventHandlersEnabled) {
             firePostEventHandlers(p_event);
         }
 
+        return handled;
     }
 
 
@@ -132,13 +133,13 @@ public abstract class AbstractEventProcessor
 
         result = result || this.defaultEventHandlers.applyEvent(getContainer(), p_event);
 
-        if (!result) {
-            result = this.unknownEventHandlers.applyEvent(getContainer(), p_event);
-        }
-
         return result;
 
+    }
 
+    @Override
+    public boolean handleUnknownEvent(Object p_event) throws Exception {
+        return this.unknownEventHandlers.applyEvent(getContainer(), p_event);
     }
 
 
@@ -151,10 +152,12 @@ public abstract class AbstractEventProcessor
 
 
     @Override
-    public void addPreEventHandler(IEventHandler p_handler) {
+    public Object addPreEventHandler(IEventHandler p_handler) {
         if (p_handler != null) {
             this.preEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
@@ -167,10 +170,12 @@ public abstract class AbstractEventProcessor
 
 
     @Override
-    public void addEventHandler(IEventHandler p_handler) {
+    public Object addEventHandler(IEventHandler p_handler) {
         if (p_handler != null) {
             this.eventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
@@ -213,16 +218,19 @@ public abstract class AbstractEventProcessor
 
 
     @Override
-    public void setScheduler(IScheduler p_Scheduler) {
+    public Object setScheduler(IScheduler p_Scheduler) {
         this.scheduler = p_Scheduler;
+        return this;
     }
 
 
     @Override
-    public void addPostEventHandler(IEventHandler p_handler) {
+    public Object addPostEventHandler(IEventHandler p_handler) {
         if (p_handler != null) {
             this.postEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
@@ -260,32 +268,38 @@ public abstract class AbstractEventProcessor
 
 
     @Override
-    public void addPreEventHandlers(Set<IEventHandler> p_handlers) {
+    public Object addPreEventHandlers(Set<IEventHandler> p_handlers) {
         if (p_handlers != null) {
             for (IEventHandler Handler : p_handlers) {
                 addPreEventHandler(Handler);
             }
         }
+
+        return this;
     }
 
 
     @Override
-    public void addEventHandlers(Set<IEventHandler> p_handlers) {
+    public Object addEventHandlers(Set<IEventHandler> p_handlers) {
         if (p_handlers != null) {
             for (IEventHandler Handler : p_handlers) {
                 addEventHandler(Handler);
             }
         }
+
+        return this;
     }
 
 
     @Override
-    public void addPostEventHandlers(Set<IEventHandler> p_handlers) {
+    public Object addPostEventHandlers(Set<IEventHandler> p_handlers) {
         if (p_handlers != null) {
             for (IEventHandler Handler : p_handlers) {
                 addPostEventHandler(Handler);
             }
         }
+
+        return this;
     }
 
 
@@ -319,10 +333,12 @@ public abstract class AbstractEventProcessor
     }
 
 
-    public void addPreDefaultEventHandler(IEventHandler<Object> p_handler) {
+    public Object addPreDefaultEventHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.preDefaultEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
@@ -331,17 +347,21 @@ public abstract class AbstractEventProcessor
      *
      * @param p_handler
      */
-    public void addDefaultEventHandler(IEventHandler<Object> p_handler) {
+    public Object addDefaultEventHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.defaultEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
-    public void addPostDefaultEventHandler(IEventHandler<Object> p_handler) {
+    public Object addPostDefaultEventHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.postDefaultEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
@@ -366,10 +386,12 @@ public abstract class AbstractEventProcessor
     }
 
 
-    public void addPreUnhandledHandler(IEventHandler<Object> p_handler) {
+    public Object addPreUnhandledHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.preUnknownEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
@@ -380,17 +402,21 @@ public abstract class AbstractEventProcessor
      *
      * @param p_handler
      */
-    public void addUnhandledEventHandler(IEventHandler<Object> p_handler) {
+    public Object addUnhandledEventHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.unknownEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
-    public void addPostUnhandledEventHandler(IEventHandler<Object> p_handler) {
+    public Object addPostUnhandledEventHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.postUnknownEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 

@@ -36,7 +36,7 @@ import java.util.UUID;
  * under the License.
  */
 public abstract class AbstractState
-        implements IState, ISchedulerAware {
+        implements IState, ISchedulerAware<IState> {
 
     private final Logger logger = LoggerFactory.getLogger(AbstractState.class);
     private final EventHandlerManager eventHandlers = new EventHandlerManager();
@@ -79,7 +79,6 @@ public abstract class AbstractState
         super();
         this.id = UUID.randomUUID();
     }
-
 
     @Override
     public UUID getId() {
@@ -147,10 +146,12 @@ public abstract class AbstractState
 
 
     @Override
-    public void addPreEventHandler(IEventHandler p_handler) {
+    public IState addPreEventHandler(IEventHandler p_handler) {
         if (p_handler != null) {
             this.eventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
@@ -163,10 +164,12 @@ public abstract class AbstractState
 
 
     @Override
-    public void addEventHandler(IEventHandler p_handler) {
+    public IState addEventHandler(IEventHandler p_handler) {
         if (p_handler != null) {
             this.eventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
@@ -179,10 +182,12 @@ public abstract class AbstractState
 
 
     @Override
-    public void addPostEventHandler(IEventHandler p_handler) {
+    public IState addPostEventHandler(IEventHandler p_handler) {
         if (p_handler != null) {
             this.eventHandlers.removeHandler(p_handler);
         }
+
+        return this;
     }
 
 
@@ -220,7 +225,9 @@ public abstract class AbstractState
      * @throws Exception
      */
     @Override
-    public void onReceive(Object p_event) throws Exception {
+    public boolean onReceive(Object p_event) throws Exception {
+
+        boolean eventHandled = false;
 
         if (this.currentEvent != null) {
             throw new InvalidStateOpException(this.getClass().getName(), null);
@@ -236,14 +243,18 @@ public abstract class AbstractState
             setCurrentEvent(p_event);
             prepareHandlersForNotify(p_event);
 
-            boolean eventHandled = this.eventHandlers.applyEvent(this, p_event);
+            eventHandled = this.eventHandlers.applyEvent(this, p_event);
 
             eventHandled = eventHandled || this.defaultEventHandlers.applyEvent(this, p_event);
 
-            if (!eventHandled) {
-                eventHandled = this.unknownEventHandlers.applyEvent(this, p_event);
-            }
         }
+
+        return eventHandled;
+    }
+
+    @Override
+    public boolean handleUnknownEvent(Object p_event) throws Exception {
+        return this.unknownEventHandlers.applyEvent(this, p_event);
     }
 
 
@@ -301,7 +312,7 @@ public abstract class AbstractState
 
 
     @Override
-    public void setScheduler(IScheduler p_Scheduler) {
+    public IState setScheduler(IScheduler p_Scheduler) {
         if (this.scheduler != p_Scheduler) {
             this.scheduler = p_Scheduler;
 
@@ -309,6 +320,8 @@ public abstract class AbstractState
                 processTimeoutSetting();
             }
         }
+
+        return this;
     }
 
 
@@ -360,32 +373,38 @@ public abstract class AbstractState
 
 
     @Override
-    public void addPreEventHandlers(Set<IEventHandler> p_handlers) {
+    public IState addPreEventHandlers(Set<IEventHandler> p_handlers) {
         if (p_handlers != null) {
             for (IEventHandler tmpEventHandler : p_handlers) {
                 addPreEventHandler(tmpEventHandler);
             }
         }
+
+        return this;
     }
 
 
     @Override
-    public void addEventHandlers(Set<IEventHandler> p_handlers) {
+    public IState addEventHandlers(Set<IEventHandler> p_handlers) {
         if (p_handlers != null) {
             for (IEventHandler tmpEventHandler : p_handlers) {
                 addEventHandler(tmpEventHandler);
             }
         }
+
+        return this;
     }
 
 
     @Override
-    public void addPostEventHandlers(Set<IEventHandler> p_handlers) {
+    public IState addPostEventHandlers(Set<IEventHandler> p_handlers) {
         if (p_handlers != null) {
             for (IEventHandler tmpEventHandler : p_handlers) {
                 addPostEventHandler(tmpEventHandler);
             }
         }
+
+        return this;
     }
 
 
@@ -419,24 +438,30 @@ public abstract class AbstractState
     }
 
 
-    public void addPreDefaultEventHandler(IEventHandler<Object> p_handler) {
+    public IState addPreDefaultEventHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.preDefaultEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
-    public void addDefaultEventHandler(IEventHandler<Object> p_handler) {
+    public IState addDefaultEventHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.defaultEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
-    public void addPostDefaultEventHandler(IEventHandler<Object> p_handler) {
+    public IState addPostDefaultEventHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.postDefaultEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
@@ -461,10 +486,12 @@ public abstract class AbstractState
     }
 
 
-    public void addPreUnhandledHandler(IEventHandler<Object> p_handler) {
+    public IState addPreUnhandledHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.preUnknownEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
@@ -475,17 +502,21 @@ public abstract class AbstractState
      *
      * @param p_handler
      */
-    public void addUnhandledEventHandler(IEventHandler<Object> p_handler) {
+    public IState addUnhandledEventHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.unknownEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 
-    public void addPostUnhandledEventHandler(IEventHandler<Object> p_handler) {
+    public IState addPostUnhandledEventHandler(IEventHandler<Object> p_handler) {
         if (p_handler != null) {
             this.postUnknownEventHandlers.addHandler(p_handler);
         }
+
+        return this;
     }
 
 

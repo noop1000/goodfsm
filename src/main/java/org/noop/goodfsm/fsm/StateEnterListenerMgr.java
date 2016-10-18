@@ -24,17 +24,17 @@ import java.util.Set;
  * specific language governing permissions and limitations
  * under the License.
  */
-public class StateListenerMgr {
+public class StateEnterListenerMgr {
 
-    private final Set<IStateListener> listeners = new LinkedHashSet<>();
+    private final Set<IStateEnterListener> listeners = new LinkedHashSet<>();
 
 
-    public StateListenerMgr() {
+    public StateEnterListenerMgr() {
         super();
     }
 
 
-    public boolean addStateListener(IStateListener p_listener) {
+    public boolean addStateListener(IStateEnterListener p_listener) {
         boolean result = false;
 
         if (p_listener != null) {
@@ -45,7 +45,7 @@ public class StateListenerMgr {
     }
 
 
-    public boolean removeStateListener(IStateListener p_listener) {
+    public boolean removeStateListener(IStateExitListener p_listener) {
         boolean result = false;
 
         if (p_listener != null) {
@@ -61,24 +61,12 @@ public class StateListenerMgr {
     }
 
 
-    public void fireStateExit(IState p_oldState) {
-        // make a copy as listeners may be added/removed during
-
-        Collection<IStateListener> Listeners = new ArrayList<>(this.listeners);
-
-        for (IStateListener tmpListener : Listeners) {
-            tmpListener.onStateExit(p_oldState);
-        }
-
-    }
-
-
     public void fireStateEnter(IState p_oldState, IState p_newState) {
         // make a copy as listeners may be added/removed during
 
-        Collection<IStateListener> Listeners = new ArrayList<>(this.listeners);
+        Collection<IStateEnterListener> Listeners = new ArrayList<>(this.listeners);
 
-        for (IStateListener tmpListener : Listeners) {
+        for (IStateEnterListener tmpListener : Listeners) {
             tmpListener.onStateEnter(p_oldState, p_newState);
         }
 

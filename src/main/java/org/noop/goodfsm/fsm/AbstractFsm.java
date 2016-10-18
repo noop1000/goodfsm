@@ -2,10 +2,8 @@ package org.noop.goodfsm.fsm;
 
 
 import org.noop.goodfsm.fsm.scheduler.IScheduler;
-import org.noop.goodfsm.fsm.scheduler.ISchedulerAware;
 import org.noop.processing.AbstractEventProcessor;
 import org.noop.processing.IEventHandler;
-import org.noop.processing.IEventProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,13 +31,14 @@ import java.util.Set;
  * under the License.
  */
 public abstract class AbstractFsm
-        implements IFsm, IEventProcessor, ISchedulerAware {
-    private final Logger logger = LoggerFactory.getLogger(AbstractFsm.class);
+        implements IFsm {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 
     private final AbstractEventProcessor abstractEventProcessor = createAbstractEventProcessor();
     private final Queue eventsToProcess = new ArrayDeque<>();
-    private final StateListenerMgr listenerManager = new StateListenerMgr();
+    private final StateEnterListenerMgr stateEnterListenerMgr = new StateEnterListenerMgr();
+    private final StateExitListenerMgr stateExitListenerMgr = new StateExitListenerMgr();
     private IState currentState = null;
     private Class<? extends IState> pendingState = null;
     private Object pendingReason = null;
@@ -47,12 +46,13 @@ public abstract class AbstractFsm
 
     public AbstractFsm() {
         super();
-        this.listenerManager.addStateListener(this);
+        this.stateExitListenerMgr.addStateListener(this);
+        this.stateEnterListenerMgr.addStateListener(this);
     }
 
 
     @Override
-    public void onReceive(Object p_event) throws Exception {
+    public boolean onReceive(Object p_event) throws Exception {
         this.eventsToProcess.offer(p_event);
 
         if (getCurrentEvent() == null) {
@@ -65,40 +65,61 @@ public abstract class AbstractFsm
 
             postReceiveCleanup();
         }
+
+        return true;
     }
 
 
-    protected void handleCurrentEvent(Object p_event) throws Exception {
+    protected boolean handleCurrentEvent(Object p_event) throws Exception {
         getAbstractEventProcessor().setCurrentEvent(p_event);
+
+        boolean handledPre = false;
+        boolean handled = false;
+        boolean handledPost = false;
 
         try {
             getAbstractEventProcessor().firePreEventHandlers(p_event);
 
             if (this.currentState != null) {
                 prepareCurrentStateForNotify();
-                this.currentState.preOnReceive(p_event);
-                this.currentState.onReceive(p_event);
+                handledPre = this.currentState.preOnReceive(p_event);
+                handled = this.currentState.onReceive(p_event);
                 postCurrentStateNotify();
             }
 
-            getAbstractEventProcessor().onReceive(p_event);
+            handled = handled || getAbstractEventProcessor().onReceive(p_event);
+
+            if (!handled) {
+                this.handleUnknownEvent(p_event);
+            }
 
         } finally {
             processPendingState();
 
             if (this.currentState != null) {
                 this.currentState.setCurrentEvent(null);
-                this.currentState.postOnReceive(p_event);
+                handledPost= this.currentState.postOnReceive(p_event);
             }
 
             getAbstractEventProcessor().firePostEventHandlers(p_event);
             getAbstractEventProcessor().setCurrentEvent(null);
 
-
         }
 
+        return handled;
     }
 
+    @Override
+    public boolean handleUnknownEvent(Object p_event) throws Exception {
+
+        boolean handled = false;
+
+        if (this.getCurrentState() != null) {
+           handled = this.getCurrentState().handleUnknownEvent(p_event);
+        }
+
+        return (handled || getAbstractEventProcessor().handleUnknownEvent(p_event));
+    }
 
     protected void prepareCurrentStateForNotify() {
         // do nothing.
@@ -119,8 +140,8 @@ public abstract class AbstractFsm
             IState OldState = this.currentState;
 
             if (OldState != null) {
-                this.listenerManager.fireStateExit(OldState);
-                this.listenerManager.removeStateListener(OldState);
+                this.stateExitListenerMgr.fireStateExit(OldState);
+                this.stateExitListenerMgr.removeStateListener(OldState);
             }
 
             IState NewState = initState(this.pendingState);
@@ -130,10 +151,11 @@ public abstract class AbstractFsm
             NewState.setCurrentEvent(getCurrentEvent());
 
             this.currentState = NewState;
-            this.listenerManager.addStateListener(this.currentState);
+            this.stateExitListenerMgr.addStateListener(this.currentState);
             this.pendingState = null;
             this.pendingReason = null;
-            this.listenerManager.fireStateEnter(OldState, this.currentState);
+            this.stateExitListenerMgr.fireStateExit(OldState);
+            this.stateEnterListenerMgr.fireStateEnter(OldState, this.currentState);
             OldState.setCurrentEvent(null);
             cleanupOldCurrentState(OldState);
 
@@ -153,14 +175,14 @@ public abstract class AbstractFsm
 
 
     @Override
-    public IState initFsm(Class<? extends IState> p_newState) throws Exception {
+    public IFsm initFsm(Class<? extends IState> p_newState) throws Exception {
         if (this.currentState == null) {
             this.currentState = initState(p_newState);
-            this.listenerManager.addStateListener(this.currentState);
+            this.stateExitListenerMgr.addStateListener(this.currentState);
 
         }
 
-        return this.currentState;
+        return this;
     }
 
 
@@ -184,7 +206,7 @@ public abstract class AbstractFsm
 
 
     @Override
-    public void transitionTo(Class<? extends IState> p_newState) throws Exception {
+    public IFsm transitionTo(Class<? extends IState> p_newState) throws Exception {
         if (this.pendingState == null) {
             this.pendingState = p_newState;
             this.pendingReason = getCurrentEvent();
@@ -193,6 +215,8 @@ public abstract class AbstractFsm
                     p_newState.getName(),
                     this.getFsmName());
         }
+
+        return this;
     }
 
 
@@ -214,20 +238,27 @@ public abstract class AbstractFsm
 
 
     @Override
-    public boolean removeStateListener(IStateListener p_listener) {
-        return this.listenerManager.removeStateListener(p_listener);
+    public boolean removeStateListener(IStateExitListener p_listener) {
+        return this.stateExitListenerMgr.removeStateListener(p_listener);
     }
 
 
     @Override
-    public boolean addStateListener(IStateListener p_listener) {
-        return this.listenerManager.addStateListener(p_listener);
+    public IFsm addStateEnterListener(IStateEnterListener p_listener) {
+        this.stateEnterListenerMgr.addStateListener(p_listener);
+        return this;
+    }
+
+    @Override
+    public IFsm addStateExitListener(IStateExitListener p_listener) {
+        this.stateExitListenerMgr.addStateListener(p_listener);
+        return this;
     }
 
 
     @Override
     public void clearAllStateListeners() {
-        this.listenerManager.clearAll();
+        this.stateExitListenerMgr.clearAll();
     }
 
 
@@ -249,25 +280,27 @@ public abstract class AbstractFsm
 
     @Override
     public Object getCurrentEvent() {
-        return getAbstractEventProcessor().getCurrentEvent();
+        return this.getAbstractEventProcessor().getCurrentEvent();
     }
 
 
     @Override
     public IScheduler getScheduler() {
-        return getAbstractEventProcessor().getScheduler();
+        return this.getAbstractEventProcessor().getScheduler();
     }
 
 
     @Override
-    public void setScheduler(IScheduler p_Scheduler) {
-        getAbstractEventProcessor().setScheduler(p_Scheduler);
+    public IFsm setScheduler(IScheduler p_Scheduler) {
+        this.getAbstractEventProcessor().setScheduler(p_Scheduler);
+        return this;
     }
 
 
     @Override
-    public void addEventHandler(IEventHandler p_handler) {
-        getAbstractEventProcessor().addEventHandler(p_handler);
+    public IFsm addEventHandler(IEventHandler p_handler) {
+        this.getAbstractEventProcessor().addEventHandler(p_handler);
+        return this;
     }
 
 
@@ -292,8 +325,9 @@ public abstract class AbstractFsm
 
 
     @Override
-    public void addPreEventHandler(IEventHandler p_handler) {
+    public IFsm addPreEventHandler(IEventHandler p_handler) {
         getAbstractEventProcessor().addPreEventHandler(p_handler);
+        return this;
     }
 
 
@@ -304,8 +338,9 @@ public abstract class AbstractFsm
 
 
     @Override
-    public void addPostEventHandler(IEventHandler p_handler) {
+    public IFsm addPostEventHandler(IEventHandler p_handler) {
         getAbstractEventProcessor().addPostEventHandler(p_handler);
+        return this;
     }
 
 
@@ -316,20 +351,23 @@ public abstract class AbstractFsm
 
 
     @Override
-    public void addPreEventHandlers(Set<IEventHandler> p_handlers) {
+    public IFsm addPreEventHandlers(Set<IEventHandler> p_handlers) {
         getAbstractEventProcessor().addPreEventHandlers(p_handlers);
+        return this;
     }
 
 
     @Override
-    public void addEventHandlers(Set<IEventHandler> p_handlers) {
-        getAbstractEventProcessor().addEventHandlers(p_handlers);
+    public IFsm addEventHandlers(Set<IEventHandler> p_handlers) {
+        this.getAbstractEventProcessor().addEventHandlers(p_handlers);
+        return this;
     }
 
 
     @Override
-    public void addPostEventHandlers(Set<IEventHandler> p_handlers) {
-        getAbstractEventProcessor().addPostEventHandlers(p_handlers);
+    public IFsm addPostEventHandlers(Set<IEventHandler> p_handlers) {
+        this.getAbstractEventProcessor().addPostEventHandlers(p_handlers);
+        return this;
     }
 
 
@@ -352,20 +390,23 @@ public abstract class AbstractFsm
 
 
     @Override
-    public void addPreDefaultEventHandler(IEventHandler<Object> p_handler) {
-        getAbstractEventProcessor().addPreDefaultEventHandler(p_handler);
+    public IFsm addPreDefaultEventHandler(IEventHandler<Object> p_handler) {
+        this.getAbstractEventProcessor().addPreDefaultEventHandler(p_handler);
+        return this;
     }
 
 
     @Override
-    public void addDefaultEventHandler(IEventHandler<Object> p_handler) {
-        getAbstractEventProcessor().addDefaultEventHandler(p_handler);
+    public IFsm addDefaultEventHandler(IEventHandler<Object> p_handler) {
+        this.getAbstractEventProcessor().addDefaultEventHandler(p_handler);
+        return this;
     }
 
 
     @Override
-    public void addPostDefaultEventHandler(IEventHandler<Object> p_handler) {
-        getAbstractEventProcessor().addPostDefaultEventHandler(p_handler);
+    public IFsm addPostDefaultEventHandler(IEventHandler<Object> p_handler) {
+        this.getAbstractEventProcessor().addPostDefaultEventHandler(p_handler);
+        return this;
     }
 
 
@@ -388,21 +429,24 @@ public abstract class AbstractFsm
 
 
     @Override
-    public void addPreUnhandledHandler(IEventHandler<Object> p_handler) {
+    public IFsm addPreUnhandledHandler(IEventHandler<Object> p_handler) {
         getAbstractEventProcessor().addPreUnhandledHandler(p_handler);
+        return this;
     }
 
 
     @Override
-    public void addUnhandledEventHandler(IEventHandler<Object> p_handler) {
+    public IFsm addUnhandledEventHandler(IEventHandler<Object> p_handler) {
         getAbstractEventProcessor().addUnhandledEventHandler(p_handler);
+        return this;
 
     }
 
 
     @Override
-    public void addPostUnhandledEventHandler(IEventHandler<Object> p_handler) {
+    public IFsm addPostUnhandledEventHandler(IEventHandler<Object> p_handler) {
         getAbstractEventProcessor().addPostUnhandledEventHandler(p_handler);
+        return this;
 
     }
 
